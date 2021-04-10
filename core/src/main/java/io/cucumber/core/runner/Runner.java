@@ -94,19 +94,16 @@ public final class Runner {
     }
 
     public void runBeforeAllHooks() {
-        ThrowableCollector throwableCollector = new ThrowableCollector();
-        for (StaticHookDefinition staticHookDefinition : glue.getBeforeAllHooks()) {
-            throwableCollector.execute(() -> executeHook(staticHookDefinition));
-        }
-        Throwable throwable = throwableCollector.getThrowable();
-        if (throwable != null) {
-            throwAsUncheckedException(throwable);
-        }
+        executeHooks(glue.getBeforeAllHooks());
     }
 
     public void runAfterAllHooks() {
+        executeHooks(glue.getAfterAllHooks());
+    }
+
+    private void executeHooks(List<StaticHookDefinition> afterAllHooks) {
         ThrowableCollector throwableCollector = new ThrowableCollector();
-        for (StaticHookDefinition staticHookDefinition : glue.getAfterAllHooks()) {
+        for (StaticHookDefinition staticHookDefinition : afterAllHooks) {
             throwableCollector.execute(() -> executeHook(staticHookDefinition));
         }
         Throwable throwable = throwableCollector.getThrowable();
