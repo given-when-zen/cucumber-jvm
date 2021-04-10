@@ -70,8 +70,8 @@ public final class Runner {
             StepTypeRegistry stepTypeRegistry = createTypeRegistryForPickle(pickle);
             snippetGenerators = createSnippetGeneratorsForPickle(stepTypeRegistry);
 
-            buildBackendWorlds(); // Java8 step definitions will be added to the
-            // glue here
+            // Java8 step definitions will be added to the glue here
+            buildBackendWorlds();
 
             glue.prepareGlue(stepTypeRegistry);
 
@@ -94,11 +94,25 @@ public final class Runner {
     }
 
     public void runBeforeAllHooks() {
-        glue.getBeforeAllHooks().forEach(this::executeHook);
+        ThrowableCollector throwableCollector = new ThrowableCollector();
+        for (StaticHookDefinition staticHookDefinition : glue.getBeforeAllHooks()) {
+            throwableCollector.execute(() -> executeHook(staticHookDefinition));
+        }
+        Throwable throwable = throwableCollector.getThrowable();
+        if (throwable != null) {
+            throwAsUncheckedException(throwable);
+        }
     }
 
     public void runAfterAllHooks() {
-        glue.getAfterAllHooks().forEach(this::executeHook);
+        ThrowableCollector throwableCollector = new ThrowableCollector();
+        for (StaticHookDefinition staticHookDefinition : glue.getAfterAllHooks()) {
+            throwableCollector.execute(() -> executeHook(staticHookDefinition));
+        }
+        Throwable throwable = throwableCollector.getThrowable();
+        if (throwable != null) {
+            throwAsUncheckedException(throwable);
+        }
     }
 
     private void executeHook(StaticHookDefinition hookDefinition) {

@@ -1,7 +1,7 @@
 package io.cucumber.core.runtime;
 
 import io.cucumber.core.eventbus.EventBus;
-import io.cucumber.core.exception.CompositeCucumberException;
+import io.cucumber.core.exception.UnrecoverableExceptions;
 import io.cucumber.core.gherkin.Feature;
 import io.cucumber.core.logging.Logger;
 import io.cucumber.core.logging.LoggerFactory;
@@ -17,8 +17,6 @@ import io.cucumber.plugin.event.TestSourceRead;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
@@ -27,7 +25,6 @@ import static io.cucumber.core.exception.ExceptionUtils.throwAsUncheckedExceptio
 import static io.cucumber.createmeta.CreateMeta.createMeta;
 import static io.cucumber.messages.TimeConversion.javaInstantToTimestamp;
 import static java.util.Collections.singletonList;
-import static java.util.Collections.synchronizedList;
 
 public final class CucumberExecutionContext {
 
@@ -38,7 +35,7 @@ public final class CucumberExecutionContext {
     private final EventBus bus;
     private final ExitStatus exitStatus;
     private final RunnerSupplier runnerSupplier;
-    private final List<Throwable> thrown = synchronizedList(new ArrayList<>());
+    private final RethrowingThrowableCollector collector = new RethrowingThrowableCollector();
     private Instant start;
 
     public CucumberExecutionContext(EventBus bus, ExitStatus exitStatus, RunnerSupplier runnerSupplier) {
@@ -69,37 +66,23 @@ public final class CucumberExecutionContext {
     }
 
     public void runBeforeAllHooks() {
-        try {
-            runnerSupplier.get().runBeforeAllHooks();
-        } catch (Throwable e) {
-            thrown.add(e);
-            throw e;
-        }
+        Runner runner = getRunner();
+        collector.executeAndThrow(runner::runBeforeAllHooks);
     }
 
     public void runAfterAllHooks() {
-        try {
-            runnerSupplier.get().runAfterAllHooks();
-        } catch (Throwable e) {
-            thrown.add(e);
-            throw e;
-        }
+        Runner runner = getRunner();
+        collector.executeAndThrow(runner::runAfterAllHooks);
     }
 
     public void finishTestRun() {
         log.debug(() -> "Sending test run finished event");
-        Throwable cucumberException = getException();
+        Throwable cucumberException = getThrowable();
         emitTestRunFinished(cucumberException);
     }
 
-    public Throwable getException() {
-        if (thrown.isEmpty()) {
-            return null;
-        }
-        if (thrown.size() == 1) {
-            return thrown.get(0);
-        }
-        return new CompositeCucumberException(thrown);
+    public Throwable getThrowable() {
+        return collector.getThrowable();
     }
 
     private void emitTestRunFinished(Throwable exception) {
@@ -131,23 +114,11 @@ public final class CucumberExecutionContext {
 
     public void runTestCase(Consumer<Runner> execution) {
         Runner runner = getRunner();
-        try {
-            execution.accept(runner);
-        } catch (TestCaseResultObserver.TestCaseFailed e) {
-            throwAsUncheckedException(e.getCause());
-        } catch (Throwable e) {
-            thrown.add(e);
-            throw e;
-        }
+        collector.executeAndThrow(() -> execution.accept(runner));
     }
 
     private Runner getRunner() {
-        try {
-            return runnerSupplier.get();
-        } catch (Throwable e) {
-            thrown.add(e);
-            throw e;
-        }
+        return collector.executeAndThrow(runnerSupplier::get);
     }
 
 }
