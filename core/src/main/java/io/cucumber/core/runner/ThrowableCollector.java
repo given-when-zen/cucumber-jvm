@@ -1,7 +1,7 @@
 package io.cucumber.core.runner;
 
-import static io.cucumber.core.runner.TestAbortedExceptions.isTestAbortedException;
 import static io.cucumber.core.exception.UnrecoverableExceptions.rethrowIfUnrecoverable;
+import static io.cucumber.core.runner.TestAbortedExceptions.isTestAbortedException;
 
 final class ThrowableCollector {
 

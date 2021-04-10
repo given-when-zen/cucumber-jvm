@@ -1,7 +1,6 @@
 package io.cucumber.core.runtime;
 
 import io.cucumber.core.eventbus.EventBus;
-import io.cucumber.core.exception.UnrecoverableExceptions;
 import io.cucumber.core.gherkin.Feature;
 import io.cucumber.core.logging.Logger;
 import io.cucumber.core.logging.LoggerFactory;
@@ -21,7 +20,6 @@ import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
 import static io.cucumber.core.exception.ExceptionUtils.printStackTrace;
-import static io.cucumber.core.exception.ExceptionUtils.throwAsUncheckedException;
 import static io.cucumber.createmeta.CreateMeta.createMeta;
 import static io.cucumber.messages.TimeConversion.javaInstantToTimestamp;
 import static java.util.Collections.singletonList;

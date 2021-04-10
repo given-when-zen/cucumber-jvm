@@ -28,6 +28,7 @@ public class RpnCalculatorSteps {
         // Runs after all scenarios
         throw new RuntimeException();
     }
+
     @AfterAll
     public static void afterAll2() {
         // Runs after all scenarios
@@ -44,6 +45,7 @@ public class RpnCalculatorSteps {
         scenario.log("Runs after each scenarios");
         throw new RuntimeException();
     }
+
     @After
     public void after2(Scenario scenario) {
         scenario.log("Runs after each scenarios");
