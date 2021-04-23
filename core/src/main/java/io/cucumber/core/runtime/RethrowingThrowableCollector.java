@@ -11,6 +11,9 @@ import java.util.function.Supplier;
 import static io.cucumber.core.exception.ExceptionUtils.throwAsUncheckedException;
 import static io.cucumber.core.exception.UnrecoverableExceptions.rethrowIfUnrecoverable;
 
+/**
+ * Collects and rethrows thrown exceptions.
+ */
 final class RethrowingThrowableCollector {
 
     private final List<Throwable> thrown = Collections.synchronizedList(new ArrayList<>());
